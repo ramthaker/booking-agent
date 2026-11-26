@@ -60,6 +60,8 @@ class BookingAgentStack(cdk.Stack):
             secret_name="WhatsApp/MetaCredentials",
             description="Meta WhatsApp Business credentials",
             generate_secret_string=secrets.SecretStringGenerator(
+                secret_string_template='{"verify_token":"whatsapp_booking_agent","access_token":"","app_secret":"","phone_number_id":""}',
+                generate_string_key="bootstrap_token",
                 exclude_punctuation=True,
             ),
         )

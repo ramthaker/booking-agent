@@ -1,4 +1,4 @@
-# WhatsApp Booking Agent on AWS AgentCore with Memory Support
+# WhatsApp Booking Agent on AWS AgentCore with Memory
 
 This project implements a WhatsApp booking agent using AWS AgentCore with memory support. The system handles appointment scheduling through WhatsApp messages with rate limiting, privacy-focused phone number hashing, and AgentCore integration.
 
@@ -13,40 +13,28 @@ This project implements a WhatsApp booking agent using AWS AgentCore with memory
 ## Project Structure
 
 ```
-demos/multi-agent-demo1/
-├── agent_workshop/      # Existing workshop code (untouched)
-├── aws/
-│   ├── lambda/
-│   │   └── whatsapp_handler/
-│   │       ├── store.py         # DynamoDB store with single-table design
-│   │       ├── rate_guard.py    # Rate limiting logic
-│   │       ├── agent.py         # AgentCore integration with memory
-│   │       ├── whatsapp.py      # Meta webhook and messaging
-│   │       └── handler.py       # Lambda entry point
-│   │       └── __init__.py      # Module exports
-│   │       └── requirements.txt # Python dependencies
-│   ├── cdk/
-│   │   ├── app.py               # CDK app entry
-│   │   ├── stack.py             # AWS resources definition
-│   │   └── requirements.txt     # CDK dependencies
-│   └── tests/
-│       ├── __init__.py
-│       ├── test_store.py        # Store unit tests
-│       ├── test_rate_guard.py   # Rate guard tests
-│       ├── test_agent.py        # Agent tests
-│       ├── test_whatsapp.py     # WhatsApp module tests
-│       ├── test_handler.py      # Lambda handler tests
-│       ├── test_e2e.py          # End-to-end tests
-│       └── test_cdk.py          # CDK stack tests
-├── docs/
-│   └── WHATSAPP_SETUP.md        # Setup documentation
-├── fixtures/
-│   ├── clean_mr.json
-│   └── risky_mr.json
-├── tests/
-│   └── test_workshop.py
-├── README.md
-└── pyproject.toml
+aws/
+├── lambda/whatsapp_handler/   # Lambda code for WhatsApp webhook
+│   ├── store.py               # DynamoDB data layer
+│   ├── rate_guard.py          # Rate limiting logic
+│   ├── agent.py               # AgentCore integration with memory
+│   ├── whatsapp.py            # Meta webhook and messaging
+│   └── handler.py             # Lambda entry point
+├── cdk/                        # AWS CDK infrastructure
+│   ├── app.py                 # CDK entry point
+│   ├── stack.py               # AWS resources definition
+│   ├── requirements.txt       # CDK dependencies
+│   └── cdk.json               # CDK configuration
+├── tests/                      # Unit tests
+│   ├── test_store.py
+│   ├── test_rate_guard.py
+│   ├── test_agent.py
+│   ├── test_whatsapp.py
+│   └── test_handler.py
+├── cloudformation/             # AgentCore Harness CloudFormation
+│   └── agentcore-harness.yaml
+└── docs/
+    └── WHATSAPP_SETUP.md      # Meta setup guide
 ```
 
 ## AWS Deployment
@@ -55,78 +43,41 @@ demos/multi-agent-demo1/
 
 - AWS CLI configured with credentials
 - Python 3.10+
-- AWS CDK v2 (`pip install aws-cdk-cli`)
-- Meta Developer account (free, no app review needed for test mode)
-- Amazon Bedrock access enabled (Claude Haiku or Nova Lite)
+- AWS CDK v2 (`npm install -g aws-cdk`)
+- Meta Developer account with WhatsApp app configured
+- Amazon Bedrock access enabled
 
 ### Deployment Steps
 
-1. **Navigate to CDK directory**
+1. **Install CDK dependencies**
    ```bash
    cd aws/cdk
-   ```
-
-2. **Install dependencies**
-   ```bash
    pip install -r requirements.txt
    ```
 
-3. **Bootstrap CDK (first time only)**
+2. **Bootstrap CDK (first time only)**
    ```bash
    cdk bootstrap
    ```
 
-4. **Deploy the stack**
+3. **Deploy the stack**
    ```bash
    cdk deploy --require-approval never
    ```
 
-5. **Get the API Gateway URL (from output or logs)**
-   The deploy output includes:
-   - `BookingAgentStack.ApiEndpoint` - Your API Gateway URL
-   - `BookingAgentStack.TableName` - DynamoDB table name
-   - `BookingAgentStack.SecretArn` - Secrets Manager secret ARN
-
-### Configure Meta Webhook
-
-1. **Create Meta Developer App** (5 minutes, no app review needed for testing)
-   1. Go to https://developers.facebook.com/apps
-   2. Click "Create App" → "Connect with customers through WhatsApp"
-   3. Fill in your business name and email
-   4. Skip app review for test mode (we only need the test phone number)
-
-2. **Get Test Credentials** (automatic with test mode)
-   1. In your app dashboard, go to "WhatsApp" → "Quickstart"
-   2. Click "Start using the API"
-   3. Create or select a messaging account
-   4. You'll get:
-      - **Phone Number ID** - Your test number ID
-      - **Temporary access token** - Valid for 24 hours (replace with system user token later)
-
-3. **Register Test Phones** (up to 5 personal WhatsApp numbers)
-   1. In WhatsApp Quickstart, click "Send and receive messages"
-   2. Send a message from your personal WhatsApp to the test number
-   3. The number will be registered for receiving messages
-
-4. **Configure Webhook**
-   1. In your app → "WhatsApp" → "Configuration"
-   2. Callback URL: `https://<API-GW-URL>/`
-   3. Verify Token: `whatsapp_booking_agent` (matching Secrets Manager)
-   4. Subscribe to `messages` field
+4. **Configure Meta Webhook**
+   - Get API Gateway URL from CDK output
+   - In Meta Developer Console → WhatsApp → Configuration
+   - Callback URL: `https://<API-GW-URL>/`
+   - Verify Token: `whatsapp_booking_agent`
+   - Subscribe to `messages` field
 
 5. **Update Secrets Manager**
-   Go to AWS Console → Secrets Manager → `BookingAgentStack-MetaCredentials` and update:
-   - `access_token`: Your Meta access token (use system user token for production)
-   - `app_secret`: Your Meta app secret
-   - `verify_token`: `whatsapp_booking_agent`
-   - `phone_number_id`: Your test phone number ID
-
-### Test Your Deployment
-
-1. Send a WhatsApp message from a registered phone: "What slots are available?"
-2. You should receive a reply listing available slots
-3. Send: "Book Dr Rao Friday 5 PM"
-4. Follow the prompts to confirm the booking
+   - Update `{StackName}-MetaCredentials` with:
+     - `access_token`: Your Meta access token
+     - `app_secret`: Your Meta app secret
+     - `verify_token`: `whatsapp_booking_agent`
+     - `phone_number_id`: Your Meta phone number ID
 
 ### Clean Up
 
@@ -156,37 +107,6 @@ Meta WhatsApp Webhook
          |
          +---> Meta WhatsApp API (responses)
 ```
-
-## DynamoDB Table Structure
-
-**Table Name**: `BookingTable` (created by CDK)
-
-**Partition Key**: `PK` (String)  
-**Sort Key**: `SK` (String)
-
-### Item Types
-
-#### Slot (Availability)
-- `PK`: `SLOT#<slot_id>`
-- `SK`: `SLOT`
-- `available`: Boolean
-- `clinic`: Clinic name
-- `doctor`: Doctor name
-- `time`: ISO datetime string (e.g., "2026-12-04 17:30")
-
-#### Booking (Reservation)
-- `PK`: `BOOKING#<phone_hash>`
-- `SK`: `BOOKING`
-- `name`: Patient name
-- `slot_id`: ID of booked slot
-- `reference`: Booking reference (BK-XXXX)
-- `timestamp`: ISO timestamp
-
-#### Rate (Rate Limiting)
-- `PK`: `RATE#<phone_hash>`
-- `SK`: `RATE`
-- `count`: Integer (current count)
-- `ttl`: Unix timestamp (60 seconds from last request)
 
 ## AgentCore Configuration
 
@@ -218,73 +138,24 @@ The agent is instructed to:
 ### Run Tests
 
 ```bash
-# From project root
 cd aws/tests
 python -m pytest -v
-
-# Run individual test files
-python -m pytest test_store.py -v
-python -m pytest test_rate_guard.py -v
-python -m pytest test_agent.py -v
-python -m pytest test_whatsapp.py -v
-python -m pytest test_handler.py -v
 ```
-
-### Test Coverage
-
-- `test_store.py`: DynamoDB store operations (conditional writes, unique constraints)
-- `test_rate_guard.py`: Rate limiting logic (exactly 5 requests per 60 seconds)
-- `test_agent.py`: AgentCore integration (tools, fallback to Strands)
-- `test_whatsapp.py`: Meta webhook signature verification, message parsing
-- `test_handler.py`: Lambda handler (verification, message processing, rate limiting)
-- `test_e2e.py`: End-to-end booking flow
-- `test_cdk.py`: Stack resource creation
 
 ## Cost Optimization
 
-- **DynamoDB**: PAY_PER_REQUEST billing (no capacity planning needed)
+- **DynamoDB**: PAY_PER_REQUEST billing
 - **Lambda**: 512MB memory, 30-second timeout
-- **Bedrock**: Claude Haiku or Amazon Nova Lite (cost-effective)
-- **Rate limiting**: TTL-based cleanup of rate limit records
+- **Bedrock**: Claude Haiku or Amazon Nova Lite
 - **API Gateway**: HTTP API (cheaper than REST API)
 
-## Security Considerations
+## Security
 
-- Phone numbers are hashed with SHA-256 before database operations
-- Access tokens stored in Secrets Manager
-- Lambda environment variables encrypted at rest
-- IAM roles follow least privilege principle
-- Conditional writes prevent race conditions
-- Meta webhook signature verification validates incoming requests
+- Phone numbers hashed with SHA-256
+- Access tokens in Secrets Manager
+- IAM roles follow least privilege
+- Meta webhook signature verification
 
-## Troubleshooting
+## Next Steps
 
-### Webhook not receiving messages
-
-1. Check API Gateway logs in CloudWatch: `aws logs tail /aws/lambda/WhatsAppHandler`
-2. Verify webhook URL in Meta console matches the API Gateway URL
-3. Ensure TLS certificate is valid (API Gateway provides this automatically)
-
-### Booking failures
-
-1. Check DynamoDB table for existing booking with same phone hash
-2. Verify slot is still marked as available
-3. Review CloudWatch logs for error messages
-
-### Rate limiting
-
-- Default: 5 requests per 60 seconds per phone number
-- Adjust `RATE_LIMIT_PER_MINUTE` environment variable in Lambda if needed
-
-## Extensions
-
-Potential enhancements:
-- Support for image messages (medical documents)
-- Appointment reminders via scheduled Lambda
-- SMS fallback for non-WhatsApp users
-- Admin dashboard for slot management
-- Multi-language support
-
-## License
-
-This project is provided for educational and demonstration purposes.
+Run `docs/WHATSAPP_SETUP.md` for step-by-step Meta configuration guide.

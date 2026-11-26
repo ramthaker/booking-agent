@@ -1,0 +1,12 @@
+README.md
+pyproject.toml
+agent_workshop/__init__.py
+agent_workshop/booking.py
+agent_workshop/cli.py
+agent_workshop/mr_review.py
+agent_workshop/web.py
+from_demo_to_production_workshop.egg-info/PKG-INFO
+from_demo_to_production_workshop.egg-info/SOURCES.txt
+from_demo_to_production_workshop.egg-info/dependency_links.txt
+from_demo_to_production_workshop.egg-info/top_level.txt
+tests/test_workshop.py

@@ -347,8 +347,7 @@
     "WhatsAppApiproxy99215450"
    ],
    "Metadata": {
-    "aws:cdk:path": "BookingAgentStack/WhatsAppApi/Deployment/Resource",
-    "aws:cdk:do-not-refactor": true
+    "aws:cdk:path": "BookingAgentStack/WhatsAppApi/Deployment/Resource"
    }
   },
   "WhatsAppApiDeploymentStageprodBDC44156": {
@@ -593,7 +592,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/22OzU7DMBCEn6V310CCBNe2CE6IKkVcq42zpCb+ibJrRZHld0d2QPTAab6ZtWe3ktXDo7zdwExb1Q1bo1sZTwxqEDDTOXaLA+u7VsZ3aA1+VOLw6V6Mb8GUIAlCNSGTBQc9TjKeis/PVkpCg5Wx8QZzmDUJA7btQMbn4BRr7/Lkmo84WU2kvUuC6jMQIZPcZRFUy31QA/IeCAWMugfGGRYZGyTejbqs+cOdUj44Fk84Gr9YdOW4K3di6MttKzRIPkwKS/2v+elc+RX54rscrZSSKKfl/9r1efAWeAwsDoHY2/9KkjgufPHuppZ397LefJHW2yk41hZls+o3i5aoqp0BAAA="
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/22OzU7DMBCEn6V317QNPEBaBCdElSKu1cZZUlP/RNm1osjyuyM7oPbAab5Zj8azk9unjdysYKK16q5ro1sZTwzqKmCic+xmB9Z3rYwf0Br83InDl3s1vgVTDkkQqhGZLDjocZTxVHyOLZSEBitj4w3mY9YkDNi2AxlfglOsvcsv93zE0Woi7V0SVJ2BCJlknUVQJfdBXZH3QChg0D0wTjDL2CBxPejyzQ1rpXxwLJ5xMH626Mq4O3di6Mu2BRokH0aFpf7P/HYu/IZ88V0+LZTSLVc25iLt+px4DzwEFodA7O1/bUkcZ75491DJ7aOsVt+k9XoMjrVF2Sz6A04vyY2mAQAA"
    },
    "Metadata": {
     "aws:cdk:path": "BookingAgentStack/CDKMetadata/Default"
