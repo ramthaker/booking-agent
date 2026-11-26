@@ -151,17 +151,20 @@ class BookingAgentStack(cdk.Stack):
             },
         )
 
-        # ===== 4. API Gateway =====
-        api = apigateway.HttpApi(
+        # ===== 4. API Gateway (REST API for Lambda proxy integration) =====
+        api = apigateway.RestApi(
             self,
             "WhatsAppApi",
-            create_default_stage=True,
-            description="WhatsApp Booking Agent API",
+            rest_api_name="WhatsApp Booking Agent API",
+            description="API for WhatsApp booking agent",
+            cloud_watch_role=True,
         )
 
-        api.add_routes(
-            path="/{proxy+}",
-            integration=lambda_.LambdaIntegration(lambda_function),
+        api_root = api.root.add_resource("{proxy}")
+        api_root.add_method(
+            "ANY",
+            apigateway.LambdaIntegration(lambda_function),
+            authorization_type=apigateway.AuthorizationType.NONE,
         )
 
         # ===== 5. Seed Lambda (Custom Resource) =====
