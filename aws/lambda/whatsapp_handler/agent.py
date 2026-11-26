@@ -145,6 +145,11 @@ When the agent runs with memory enabled, it will automatically remember:
 Use this memory to provide a more personalized experience on subsequent visits.
 """,
         callback_handler=None,
+        # Memory configuration for short-term and user preference memory
+        memory_config={
+            "short_term": {"enabled": True},
+            "user_preference": {"enabled": True}
+        },
     )
 
     return supervisor
@@ -163,27 +168,28 @@ def invoke_agent(
     Returns:
         The agent's response text
     """
-    supervisor = build_supervisor()
-
-    # Check if we should use AgentCore Harness
     harness_arn = os.getenv("AGENTCORE_HARNESS_ARN")
 
     if harness_arn:
-        # Use AgentCore Runtime SDK (if available)
-        # This would require the bedrock-agentcore package
+        # Use AgentCore Harness via Runtime SDK
+        # The Harness runs the agent (model + tools + memory) managed by AWS
         try:
             import boto3
+
+            # Extract agent ID from ARN: arn:aws:bedrock:region:acc:agent-runtime/agent-id
+            agent_id = harness_arn.split("/")[-1] if "/" in harness_arn else harness_arn
+            alias_id = os.getenv("AGENTCORE_ALIAS_ID", "TSTALIASID")
 
             client = boto3.client("bedrock-agent-runtime", region_name="ap-south-1")
 
             response = client.invoke_agent(
-                agentId=harness_arn.split("/")[-1],
-                agentAliasId=os.getenv("AGENTCORE_ALIAS_ID", "TSTALIASID"),
+                agentId=agent_id,
+                agentAliasId=alias_id,
                 sessionId=session_id,
                 inputText=message,
             )
 
-            # Extract response from AgentCore
+            # Extract response from AgentCore chunks
             response_parts = []
             for event in response.get("completion", []):
                 if "chunk" in event:
@@ -192,14 +198,18 @@ def invoke_agent(
 
             return "".join(response_parts).strip()
 
-        except ImportError:
-            # Fall back to direct Strands Agent
-            pass
-        except Exception:
-            # Fall back to direct Strands Agent on any error
-            pass
+        except Exception as e:
+            # Log error but fall back to Strands Agent
+            print(f"AgentCore Harness error, falling back to Strands: {e}")
+            return _invoke_strands_agent(session_id, message)
 
     # Fall back to direct Strands Agent invocation
-    # Agent will use session_id as part of its memory context
+    return _invoke_strands_agent(session_id, message)
+
+
+def _invoke_strands_agent(session_id: str, message: str) -> str:
+    """Invoke Strands Agent directly (fallback when no Harness configured)."""
+    supervisor = build_supervisor()
     response = supervisor(message)
     return response if isinstance(response, str) else str(response)
+

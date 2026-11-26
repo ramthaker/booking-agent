@@ -20,6 +20,13 @@ class BookingAgentStack(cdk.Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs: Any) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
+        # ===== 0. AgentCore Harness (Managed Agent) =====
+        # Note: AgentCore Harness is created via AWS Console or CloudFormation
+        # We reference it here via env var AGENTCORE_HARNESS_ARN
+        # Create a harness at: https://console.aws.amazon.com/bedrock/home?region=ap-south-1#/agent-harnesses
+        # Or use CloudFormation with AWS::Bedrock::Agent
+        harness_arn = os.getenv("AGENTCORE_HARNESS_ARN", "")
+
         # ===== 1. DynamoDB Table =====
         table = dynamodb.TableV2(
             self,
@@ -135,6 +142,7 @@ class BookingAgentStack(cdk.Stack):
                 "BEDROCK_MODEL_ID": os.getenv("BEDROCK_MODEL_ID", "anthropic.claude-3-haiku-20240307-v1:0"),
                 "AWS_REGION": self.region,
                 "RATE_LIMIT_PER_MINUTE": "5",
+                "AGENTCORE_HARNESS_ARN": harness_arn,  # Optional - leave empty to use Strands Agent
                 "META_VERIFY_TOKEN": meta_secret.secret_value_from_json("verify_token").unsafe_unwrap(),
             },
             secrets={

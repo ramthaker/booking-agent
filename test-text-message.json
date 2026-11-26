@@ -1,0 +1,8 @@
+{
+  "messaging_product": "whatsapp",
+  "to": "919974703403",
+  "type": "text",
+  "text": {
+    "body": "Hello! This is a test from AWS Lambda."
+  }
+}
