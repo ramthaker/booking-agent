@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 """CDK entry point for WhatsApp Booking Agent."""
 import os
+import sys
+
+# Fix for relative imports - convert to absolute imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import aws_cdk as cdk
-from .stack import BookingAgentStack
+from aws.cdk.stack import BookingAgentStack
 
 app = cdk.App()
 BookingAgentStack(app, "BookingAgentStack", env=cdk.Environment(
