@@ -1,0 +1,9 @@
+{
+  "title": "MR !42: Improve notification gateway reliability",
+  "context": "The expected timeout is 30 seconds; feature must be gated before rollout.",
+  "changes": [
+    {"file": "src/Gateway/ApiClient.cs", "line": 17, "text": "private static readonly TimeSpan Timeout = TimeSpan.FromMilliseconds(30);"},
+    {"file": "src/Gateway/AuthLogger.cs", "line": 44, "text": "logger.LogInformation(\"Token: {Token}\", bearerToken);"},
+    {"file": "src/Gateway/FeatureSwitch.cs", "line": 9, "text": "public const string FeatureFlag = \"always_on\";"}
+  ]
+}

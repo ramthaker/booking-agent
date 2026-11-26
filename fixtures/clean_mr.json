@@ -1,0 +1,8 @@
+{
+  "title": "MR !43: Add timeout regression tests",
+  "context": "No known risky changes in this educational fixture.",
+  "changes": [
+    {"file": "src/Gateway/ApiClient.cs", "line": 17, "text": "private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(30);"},
+    {"file": "tests/Gateway/ApiClientTests.cs", "line": 11, "text": "public void UsesExpectedTimeout() { /* test fixture */ }"}
+  ]
+}

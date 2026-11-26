@@ -1,0 +1,249 @@
+"""CDK stack for WhatsApp Booking Agent."""
+from __future__ import annotations
+
+import os
+import sys
+from typing import Any
+
+import aws_cdk as cdk
+import aws_cdk.aws_dynamodb as dynamodb
+import aws_cdk.aws_iam as iam
+import aws_cdk.aws_lambda as lambda_
+import aws_cdk.aws_secretsmanager as secrets
+import aws_cdk.aws_apigateway as apigateway
+from constructs import Construct
+
+
+class BookingAgentStack(cdk.Stack):
+    """CDK stack for the WhatsApp Booking Agent."""
+
+    def __init__(self, scope: Construct, construct_id: str, **kwargs: Any) -> None:
+        super().__init__(scope, construct_id, **kwargs)
+
+        # ===== 1. DynamoDB Table =====
+        table = dynamodb.TableV2(
+            self,
+            "BookingTable",
+            partition_key=dynamodb.Attribute(
+                name="pk", type=dynamodb.AttributeType.STRING
+            ),
+            sort_key=dynamodb.Attribute(
+                name="sk", type=dynamodb.AttributeType.STRING
+            ),
+            billing=dynamodb.Billing.pay_per_request(),
+            deletion_protection=False,  # Enable in production
+            point_in_time_recovery=True,
+        )
+
+        # Add TTL attribute
+        table.add_global_secondary_index(
+            index_name="ttl-index",
+            partition_key=dynamodb.Attribute(
+                name="ttl", type=dynamodb.AttributeType.NUMBER
+            ),
+            sort_key=dynamodb.Attribute(
+                name="pk", type=dynamodb.AttributeType.STRING
+            ),
+        )
+
+        # ===== 2. Secrets Manager =====
+        meta_secret = secrets.Secret(
+            self,
+            "MetaCredentials",
+            secret_name="WhatsApp/MetaCredentials",
+            description="Meta WhatsApp Business credentials",
+            generate_secret_string=secrets.SecretStringGenerator(
+                exclude_punctuation=True,
+            ),
+        )
+
+        # ===== 3. Lambda Function =====
+        lambda_role = iam.Role(
+            self,
+            "LambdaRole",
+            assumed_by=iam.ServicePrincipal("lambda.amazonaws.com"),
+            inline_policies={
+                "DynamoDBAccess": iam.PolicyDocument(
+                    statements=[
+                        iam.PolicyStatement(
+                            actions=[
+                                "dynamodb:GetItem",
+                                "dynamodb:PutItem",
+                                "dynamodb:UpdateItem",
+                                "dynamodb:DeleteItem",
+                                "dynamodb:Query",
+                                "dynamodb:Scan",
+                            ],
+                            resources=[table.table_arn],
+                        ),
+                    ]
+                ),
+                "BedrockAccess": iam.PolicyDocument(
+                    statements=[
+                        iam.PolicyStatement(
+                            actions=[
+                                "bedrock:InvokeModel",
+                                "bedrock:InvokeModelWithResponseStream",
+                            ],
+                            resources=[
+                                f"arn:aws:bedrock:{self.region}::foundation-model/anthropic.claude-3-haiku-20240307-v1:0",
+                                f"arn:aws:bedrock:{self.region}::foundation-model/amazon.nova-lite-v1:0",
+                                f"arn:aws:bedrock:{self.region}::foundation-model/amazon.nova-pro-v1:0",
+                            ],
+                        ),
+                    ]
+                ),
+                "AgentCoreAccess": iam.PolicyDocument(
+                    statements=[
+                        iam.PolicyStatement(
+                            actions=[
+                                "bedrock-agentcore:InvokeAgentRuntime",
+                                "bedrock-agentcore:PutMemory",
+                                "bedrock-agentcore:GetMemory",
+                            ],
+                            resources=[
+                                f"arn:aws:bedrock:{self.region}:{self.account}:agent-runtime/*"
+                            ],
+                        ),
+                    ]
+                ),
+                "SecretsAccess": iam.PolicyDocument(
+                    statements=[
+                        iam.PolicyStatement(
+                            actions=["secretsmanager:GetSecretValue"],
+                            resources=[meta_secret.secret_arn],
+                        ),
+                    ]
+                ),
+            },
+        )
+
+        lambda_function = lambda_.Function(
+            self,
+            "WhatsAppHandler",
+            runtime=lambda_.Runtime.PYTHON_3_12,
+            handler="handler.lambda_handler",
+            code=lambda_.Code.from_asset(
+                "aws/lambda/whatsapp_handler",
+                exclude=["*.pyc", "__pycache__", "*.pyo"],
+            ),
+            role=lambda_role,
+            timeout=cdk.Duration.seconds(30),
+            memory_size=512,
+            environment={
+                "DYNAMODB_TABLE_NAME": table.table_name,
+                "BEDROCK_MODEL_ID": os.getenv("BEDROCK_MODEL_ID", "anthropic.claude-3-haiku-20240307-v1:0"),
+                "AWS_REGION": self.region,
+                "RATE_LIMIT_PER_MINUTE": "5",
+                "META_VERIFY_TOKEN": meta_secret.secret_value_from_json("verify_token").unsafe_unwrap(),
+            },
+            secrets={
+                "META_ACCESS_TOKEN": lambda_.SecretValue.secrets_manager(
+                    meta_secret.secret_arn, json_field="access_token"
+                ),
+                "META_APP_SECRET": lambda_.SecretValue.secrets_manager(
+                    meta_secret.secret_arn, json_field="app_secret"
+                ),
+                "META_PHONE_NUMBER_ID": lambda_.SecretValue.secrets_manager(
+                    meta_secret.secret_arn, json_field="phone_number_id"
+                ),
+            },
+        )
+
+        # ===== 4. API Gateway =====
+        api = apigateway.HttpApi(
+            self,
+            "WhatsAppApi",
+            create_default_stage=True,
+            description="WhatsApp Booking Agent API",
+        )
+
+        api.add_routes(
+            path="/{proxy+}",
+            integration=lambda_.LambdaIntegration(lambda_function),
+        )
+
+        # ===== 5. Seed Lambda (Custom Resource) =====
+        seed_lambda_role = iam.Role(
+            self,
+            "SeedLambdaRole",
+            assumed_by=iam.ServicePrincipal("lambda.amazonaws.com"),
+            inline_policies={
+                "SeedAccess": iam.PolicyDocument(
+                    statements=[
+                        iam.PolicyStatement(
+                            actions=[
+                                "dynamodb:GetItem",
+                                "dynamodb:PutItem",
+                            ],
+                            resources=[table.table_arn],
+                        ),
+                    ]
+                ),
+            },
+        )
+
+        seed_lambda = lambda_.Function(
+            self,
+            "SeedSlots",
+            runtime=lambda_.Runtime.PYTHON_3_12,
+            handler="seed.handler",
+            code=lambda_.Code.from_inline("""
+import boto3
+import os
+from botocore.exceptions import ClientError
+
+def handler(event, context):
+    if event.get('RequestType') not in ['Create', 'Update']:
+        return {'PhysicalResourceId': event.get('PhysicalResourceId', 'seed')}
+    
+    table_name = os.getenv('DYNAMODB_TABLE_NAME')
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table(table_name)
+    
+    # Seed slots
+    slots = [
+        {'pk': 'SLOT#R-1730', 'sk': 'SLOT', 'doctor': 'Dr Rao', 'clinic': 'West Clinic', 'time': '2026-12-04 17:30', 'available': True},
+        {'pk': 'SLOT#R-1800', 'sk': 'SLOT', 'doctor': 'Dr Rao', 'clinic': 'West Clinic', 'time': '2026-12-04 18:00', 'available': True},
+        {'pk': 'SLOT#S-1600', 'sk': 'SLOT', 'doctor': 'Dr Shah', 'clinic': 'East Clinic', 'time': '2026-12-04 16:00', 'available': True},
+    ]
+    
+    for slot in slots:
+        table.put_item(Item=slot, ConditionExpression='attribute_not_exists(pk)')
+    
+    return {'PhysicalResourceId': 'seed'}
+"""),
+            role=seed_lambda_role,
+            timeout=cdk.Duration.seconds(10),
+            memory_size=128,
+            environment={
+                "DYNAMODB_TABLE_NAME": table.table_name,
+            },
+        )
+
+        cdk.CustomResource(
+            self,
+            "SeedSlotsResource",
+            service_token=seed_lambda.function_arn,
+            properties={"TableArn": table.table_arn},
+        )
+
+        # ===== Outputs =====
+        cdk.CfnOutput(
+            self,
+            "ApiEndpoint",
+            value=api.api_endpoint,
+            description="API Gateway endpoint URL",
+        )
+        cdk.CfnOutput(
+            self,
+            "TableName",
+            value=table.table_name,
+            description="DynamoDB table name",
+        )
+        cdk.CfnOutput(
+            self,
+            "SecretArn",
+            value=meta_secret.secret_arn,
+            description="Secrets Manager secret ARN",
+        )
