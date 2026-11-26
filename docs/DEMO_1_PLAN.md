@@ -108,10 +108,67 @@ The system supports three different agent modes:
 | **agentcore-harness** | Set `AGENTCORE_HARNESS_ARN` | Fully managed AgentCore Harness |
 
 ### How to Switch Modes
+
+#### 1. Lambda + Strands Agent (Default)
 ```bash
 aws lambda update-function-configuration \
   --function-name WhatsAppHandler \
-  --environment "Variables={AGENT_MODE=agentcore-harness,AGENTCORE_HARNESS_ARN=<ARN>}"
+  --environment "Variables={AGENT_MODE=lambda-strands}"
+```
+
+#### 2. AgentCore Runtime
+```bash
+# First, create an AgentCore Runtime agent (via console or CLI)
+# Then update Lambda with the harness ARN:
+
+aws lambda update-function-configuration \
+  --function-name WhatsAppHandler \
+  --environment "Variables={AGENT_MODE=agentcore-runtime,AGENTCORE_HARNESS_ARN=arn:aws:bedrock:ap-south-1:123456789012:agent-runtime/xxx}"
+```
+
+#### 3. AgentCore Harness
+```bash
+# Deploy CloudFormation template first:
+cd aws/cloudformation
+aws cloudformation deploy \
+  --template-file agentcore-harness.yaml \
+  --stack-name booking-agent-harness \
+  --capabilities CAPABILITY_IAM
+
+# Get the Agent ID:
+aws cloudformation describe-stacks \
+  --stack-name booking-agent-harness \
+  --query 'Stacks[0].Outputs[?OutputKey==`AgentId`].OutputValue' \
+  --output text
+
+# Update Lambda with the harness ARN:
+aws lambda update-function-configuration \
+  --function-name WhatsAppHandler \
+  --environment "Variables={AGENT_MODE=agentcore-harness,AGENTCORE_HARNESS_ARN=<AGENT_ID>}"
+```
+
+#### Switch Back to Default
+```bash
+aws lambda update-function-configuration \
+  --function-name WhatsAppHandler \
+  --environment "Variables={AGENT_MODE=lambda-strands,AGENTCORE_HARNESS_ARN=}"
+```
+
+### Full Deploy Commands
+
+```bash
+# Install dependencies
+cd aws/cdk
+pip install -r requirements.txt
+
+# Deploy CDK stack
+cdk deploy --require-approval never
+
+# Get API Gateway URL from output
+cdk list
+
+# Configure Meta webhook (via AWS Console or CLI)
+# Update Secrets Manager with your credentials
 ```
 
 ## Cost Estimate (Monthly)

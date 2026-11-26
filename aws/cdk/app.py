@@ -12,8 +12,9 @@ import aws_cdk as cdk
 from stack import BookingAgentStack
 
 app = cdk.App()
-BookingAgentStack(app, "BookingAgentStack", env=cdk.Environment(
+stack_name = os.getenv("CDK_STACK_NAME", "BookingAgentStackUsEast")
+BookingAgentStack(app, stack_name, env=cdk.Environment(
     account=os.getenv("CDK_DEFAULT_ACCOUNT"),
-    region=os.getenv("CDK_DEFAULT_REGION", "ap-south-1"),
+    region=os.getenv("CDK_DEFAULT_REGION", "us-east-1"),
 ))
 app.synth()

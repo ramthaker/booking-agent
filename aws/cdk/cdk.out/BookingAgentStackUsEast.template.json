@@ -1,0 +1,925 @@
+{
+ "Resources": {
+  "BookingTable7E9C9410": {
+   "Type": "AWS::DynamoDB::GlobalTable",
+   "Properties": {
+    "AttributeDefinitions": [
+     {
+      "AttributeName": "pk",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "sk",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "ttl",
+      "AttributeType": "N"
+     }
+    ],
+    "BillingMode": "PAY_PER_REQUEST",
+    "GlobalSecondaryIndexes": [
+     {
+      "IndexName": "ttl-index",
+      "KeySchema": [
+       {
+        "AttributeName": "ttl",
+        "KeyType": "HASH"
+       },
+       {
+        "AttributeName": "pk",
+        "KeyType": "RANGE"
+       }
+      ],
+      "Projection": {
+       "ProjectionType": "ALL"
+      }
+     }
+    ],
+    "KeySchema": [
+     {
+      "AttributeName": "pk",
+      "KeyType": "HASH"
+     },
+     {
+      "AttributeName": "sk",
+      "KeyType": "RANGE"
+     }
+    ],
+    "Replicas": [
+     {
+      "DeletionProtectionEnabled": false,
+      "GlobalSecondaryIndexes": [
+       {
+        "IndexName": "ttl-index"
+       }
+      ],
+      "PointInTimeRecoverySpecification": {
+       "PointInTimeRecoveryEnabled": true
+      },
+      "Region": "us-east-1"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "BookingAgentStackUsEast/BookingTable/Resource"
+   }
+  },
+  "MetaCredentialsF3EB9C83": {
+   "Type": "AWS::SecretsManager::Secret",
+   "Properties": {
+    "Description": "Meta WhatsApp Business credentials",
+    "GenerateSecretString": {
+     "ExcludePunctuation": true,
+     "GenerateStringKey": "bootstrap_token",
+     "SecretStringTemplate": "{\"verify_token\":\"whatsapp_booking_agent\",\"access_token\":\"\",\"app_secret\":\"\",\"phone_number_id\":\"\"}"
+    },
+    "Name": "WhatsApp/MetaCredentials"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "BookingAgentStackUsEast/MetaCredentials/Resource"
+   }
+  },
+  "LambdaRole3A44B857": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Policies": [
+     {
+      "PolicyDocument": {
+       "Statement": [
+        {
+         "Action": [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Query",
+          "dynamodb:Scan"
+         ],
+         "Effect": "Allow",
+         "Resource": {
+          "Fn::GetAtt": [
+           "BookingTable7E9C9410",
+           "Arn"
+          ]
+         }
+        }
+       ],
+       "Version": "2012-10-17"
+      },
+      "PolicyName": "DynamoDBAccess"
+     },
+     {
+      "PolicyDocument": {
+       "Statement": [
+        {
+         "Action": [
+          "bedrock:InvokeModel",
+          "bedrock:InvokeModelWithResponseStream"
+         ],
+         "Effect": "Allow",
+         "Resource": [
+          "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-haiku-20240307-v1:0",
+          "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-lite-v1:0",
+          "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-pro-v1:0"
+         ]
+        }
+       ],
+       "Version": "2012-10-17"
+      },
+      "PolicyName": "BedrockAccess"
+     },
+     {
+      "PolicyDocument": {
+       "Statement": [
+        {
+         "Action": [
+          "bedrock-agentcore:InvokeAgentRuntime",
+          "bedrock-agentcore:PutMemory",
+          "bedrock-agentcore:GetMemory"
+         ],
+         "Effect": "Allow",
+         "Resource": "arn:aws:bedrock:us-east-1:112505857747:agent-runtime/*"
+        }
+       ],
+       "Version": "2012-10-17"
+      },
+      "PolicyName": "AgentCoreAccess"
+     },
+     {
+      "PolicyDocument": {
+       "Statement": [
+        {
+         "Action": "secretsmanager:GetSecretValue",
+         "Effect": "Allow",
+         "Resource": {
+          "Ref": "MetaCredentialsF3EB9C83"
+         }
+        }
+       ],
+       "Version": "2012-10-17"
+      },
+      "PolicyName": "SecretsAccess"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "BookingAgentStackUsEast/LambdaRole/Resource"
+   }
+  },
+  "WhatsAppHandler3F0B6DCF": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-112505857747-us-east-1",
+     "S3Key": "e0ffe563380f5bc69e096b7949644b96c65e8ce7412fa12e03b320ab8508c212.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "DYNAMODB_TABLE_NAME": {
+       "Ref": "BookingTable7E9C9410"
+      },
+      "BEDROCK_MODEL_ID": "anthropic.claude-3-haiku-20240307-v1:0",
+      "REGION": "us-east-1",
+      "RATE_LIMIT_PER_MINUTE": "5",
+      "AGENT_MODE": "lambda-strands",
+      "AGENTCORE_HARNESS_ARN": "",
+      "META_VERIFY_TOKEN": {
+       "Fn::Join": [
+        "",
+        [
+         "{{resolve:secretsmanager:",
+         {
+          "Ref": "MetaCredentialsF3EB9C83"
+         },
+         ":SecretString:verify_token::}}"
+        ]
+       ]
+      },
+      "META_ACCESS_TOKEN": {
+       "Fn::Join": [
+        "",
+        [
+         "{{resolve:secretsmanager:",
+         {
+          "Ref": "MetaCredentialsF3EB9C83"
+         },
+         ":SecretString:access_token::}}"
+        ]
+       ]
+      },
+      "META_APP_SECRET": {
+       "Fn::Join": [
+        "",
+        [
+         "{{resolve:secretsmanager:",
+         {
+          "Ref": "MetaCredentialsF3EB9C83"
+         },
+         ":SecretString:app_secret::}}"
+        ]
+       ]
+      },
+      "META_PHONE_NUMBER_ID": {
+       "Fn::Join": [
+        "",
+        [
+         "{{resolve:secretsmanager:",
+         {
+          "Ref": "MetaCredentialsF3EB9C83"
+         },
+         ":SecretString:phone_number_id::}}"
+        ]
+       ]
+      }
+     }
+    },
+    "Handler": "handler.lambda_handler",
+    "MemorySize": 512,
+    "Role": {
+     "Fn::GetAtt": [
+      "LambdaRole3A44B857",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.12",
+    "Timeout": 30
+   },
+   "DependsOn": [
+    "LambdaRole3A44B857"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "BookingAgentStackUsEast/WhatsAppHandler/Resource",
+    "aws:asset:path": "asset.e0ffe563380f5bc69e096b7949644b96c65e8ce7412fa12e03b320ab8508c212",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "WhatsAppApiD20252F2": {
+   "Type": "AWS::ApiGateway::RestApi",
+   "Properties": {
+    "Description": "API for WhatsApp booking agent",
+    "Name": "WhatsApp Booking Agent API"
+   },
+   "Metadata": {
+    "aws:cdk:path": "BookingAgentStackUsEast/WhatsAppApi/Resource"
+   }
+  },
+  "WhatsAppApiCloudWatchRoleA538C667": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "apigateway.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+       ]
+      ]
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "BookingAgentStackUsEast/WhatsAppApi/CloudWatchRole/Resource"
+   }
+  },
+  "WhatsAppApiAccountAD1BB99B": {
+   "Type": "AWS::ApiGateway::Account",
+   "Properties": {
+    "CloudWatchRoleArn": {
+     "Fn::GetAtt": [
+      "WhatsAppApiCloudWatchRoleA538C667",
+      "Arn"
+     ]
+    }
+   },
+   "DependsOn": [
+    "WhatsAppApiD20252F2"
+   ],
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "BookingAgentStackUsEast/WhatsAppApi/Account"
+   }
+  },
+  "WhatsAppApiDeployment91AFD2B523bed0a85907bf23d7f3fe077c6cb632": {
+   "Type": "AWS::ApiGateway::Deployment",
+   "Properties": {
+    "Description": "API for WhatsApp booking agent",
+    "RestApiId": {
+     "Ref": "WhatsAppApiD20252F2"
+    }
+   },
+   "DependsOn": [
+    "WhatsAppApiproxyANY3F267A50",
+    "WhatsAppApiproxy9B8BD162",
+    "WhatsAppApiANY6BFB3957"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "BookingAgentStackUsEast/WhatsAppApi/Deployment/Resource"
+   }
+  },
+  "WhatsAppApiDeploymentStageprodBDC44156": {
+   "Type": "AWS::ApiGateway::Stage",
+   "Properties": {
+    "DeploymentId": {
+     "Ref": "WhatsAppApiDeployment91AFD2B523bed0a85907bf23d7f3fe077c6cb632"
+    },
+    "RestApiId": {
+     "Ref": "WhatsAppApiD20252F2"
+    },
+    "StageName": "prod"
+   },
+   "DependsOn": [
+    "WhatsAppApiAccountAD1BB99B"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "BookingAgentStackUsEast/WhatsAppApi/DeploymentStage.prod/Resource"
+   }
+  },
+  "WhatsAppApiANYApiPermissionBookingAgentStackUsEastWhatsAppApiE0C887D5ANY14F48739": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "WhatsAppHandler3F0B6DCF",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:112505857747:",
+       {
+        "Ref": "WhatsAppApiD20252F2"
+       },
+       "/",
+       {
+        "Ref": "WhatsAppApiDeploymentStageprodBDC44156"
+       },
+       "/*/"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BookingAgentStackUsEast/WhatsAppApi/Default/ANY/ApiPermission.BookingAgentStackUsEastWhatsAppApiE0C887D5.ANY.."
+   }
+  },
+  "WhatsAppApiANYApiPermissionTestBookingAgentStackUsEastWhatsAppApiE0C887D5ANYAD038313": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "WhatsAppHandler3F0B6DCF",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:112505857747:",
+       {
+        "Ref": "WhatsAppApiD20252F2"
+       },
+       "/test-invoke-stage/*/"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BookingAgentStackUsEast/WhatsAppApi/Default/ANY/ApiPermission.Test.BookingAgentStackUsEastWhatsAppApiE0C887D5.ANY.."
+   }
+  },
+  "WhatsAppApiANY6BFB3957": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "ANY",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "WhatsAppHandler3F0B6DCF",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Fn::GetAtt": [
+      "WhatsAppApiD20252F2",
+      "RootResourceId"
+     ]
+    },
+    "RestApiId": {
+     "Ref": "WhatsAppApiD20252F2"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BookingAgentStackUsEast/WhatsAppApi/Default/ANY/Resource"
+   }
+  },
+  "WhatsAppApiproxy9B8BD162": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Fn::GetAtt": [
+      "WhatsAppApiD20252F2",
+      "RootResourceId"
+     ]
+    },
+    "PathPart": "{proxy+}",
+    "RestApiId": {
+     "Ref": "WhatsAppApiD20252F2"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BookingAgentStackUsEast/WhatsAppApi/Default/{proxy+}/Resource"
+   }
+  },
+  "WhatsAppApiproxyANYApiPermissionBookingAgentStackUsEastWhatsAppApiE0C887D5ANYproxyBC466812": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "WhatsAppHandler3F0B6DCF",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:112505857747:",
+       {
+        "Ref": "WhatsAppApiD20252F2"
+       },
+       "/",
+       {
+        "Ref": "WhatsAppApiDeploymentStageprodBDC44156"
+       },
+       "/*/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BookingAgentStackUsEast/WhatsAppApi/Default/{proxy+}/ANY/ApiPermission.BookingAgentStackUsEastWhatsAppApiE0C887D5.ANY..{proxy+}"
+   }
+  },
+  "WhatsAppApiproxyANYApiPermissionTestBookingAgentStackUsEastWhatsAppApiE0C887D5ANYproxy2A536E24": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "WhatsAppHandler3F0B6DCF",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:112505857747:",
+       {
+        "Ref": "WhatsAppApiD20252F2"
+       },
+       "/test-invoke-stage/*/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BookingAgentStackUsEast/WhatsAppApi/Default/{proxy+}/ANY/ApiPermission.Test.BookingAgentStackUsEastWhatsAppApiE0C887D5.ANY..{proxy+}"
+   }
+  },
+  "WhatsAppApiproxyANY3F267A50": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "ANY",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "WhatsAppHandler3F0B6DCF",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "WhatsAppApiproxy9B8BD162"
+    },
+    "RestApiId": {
+     "Ref": "WhatsAppApiD20252F2"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "BookingAgentStackUsEast/WhatsAppApi/Default/{proxy+}/ANY/Resource"
+   }
+  },
+  "SeedLambdaRole88DBA302": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Policies": [
+     {
+      "PolicyDocument": {
+       "Statement": [
+        {
+         "Action": [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem"
+         ],
+         "Effect": "Allow",
+         "Resource": {
+          "Fn::GetAtt": [
+           "BookingTable7E9C9410",
+           "Arn"
+          ]
+         }
+        }
+       ],
+       "Version": "2012-10-17"
+      },
+      "PolicyName": "SeedAccess"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "BookingAgentStackUsEast/SeedLambdaRole/Resource"
+   }
+  },
+  "SeedSlotsBF536987": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "ZipFile": "\nimport boto3\nimport os\nfrom botocore.exceptions import ClientError\n\ndef handler(event, context):\n    if event.get('RequestType') not in ['Create', 'Update']:\n        return {'PhysicalResourceId': event.get('PhysicalResourceId', 'seed')}\n    \n    table_name = os.getenv('DYNAMODB_TABLE_NAME')\n    dynamodb = boto3.resource('dynamodb')\n    table = dynamodb.Table(table_name)\n    \n    # Seed slots\n    slots = [\n        {'pk': 'SLOT#R-1730', 'sk': 'SLOT', 'doctor': 'Dr Rao', 'clinic': 'West Clinic', 'time': '2026-12-04 17:30', 'available': True},\n        {'pk': 'SLOT#R-1800', 'sk': 'SLOT', 'doctor': 'Dr Rao', 'clinic': 'West Clinic', 'time': '2026-12-04 18:00', 'available': True},\n        {'pk': 'SLOT#S-1600', 'sk': 'SLOT', 'doctor': 'Dr Shah', 'clinic': 'East Clinic', 'time': '2026-12-04 16:00', 'available': True},\n    ]\n    \n    for slot in slots:\n        table.put_item(Item=slot, ConditionExpression='attribute_not_exists(pk)')\n    \n    return {'PhysicalResourceId': 'seed'}\n"
+    },
+    "Environment": {
+     "Variables": {
+      "DYNAMODB_TABLE_NAME": {
+       "Ref": "BookingTable7E9C9410"
+      }
+     }
+    },
+    "Handler": "index.handler",
+    "MemorySize": 128,
+    "Role": {
+     "Fn::GetAtt": [
+      "SeedLambdaRole88DBA302",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.12",
+    "Timeout": 10
+   },
+   "DependsOn": [
+    "SeedLambdaRole88DBA302"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "BookingAgentStackUsEast/SeedSlots/Resource"
+   }
+  },
+  "SeedSlotsProviderframeworkonEventServiceRole4C55EB32": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "BookingAgentStackUsEast/SeedSlotsProvider/framework-onEvent/ServiceRole/Resource"
+   }
+  },
+  "SeedSlotsProviderframeworkonEventServiceRoleDefaultPolicy4A0F5ED2": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "lambda:InvokeFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "SeedSlotsBF536987",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "SeedSlotsBF536987",
+             "Arn"
+            ]
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "SeedSlotsProviderframeworkonEventServiceRoleDefaultPolicy4A0F5ED2",
+    "Roles": [
+     {
+      "Ref": "SeedSlotsProviderframeworkonEventServiceRole4C55EB32"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "BookingAgentStackUsEast/SeedSlotsProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "SeedSlotsProviderframeworkonEvent85987EEC": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-112505857747-us-east-1",
+     "S3Key": "d9861ea7a45affd23e47a614acb2fddc6e45c20a891284c958187dafbf9ee36b.zip"
+    },
+    "Description": "AWS CDK resource provider framework - onEvent (BookingAgentStackUsEast/SeedSlotsProvider)",
+    "Environment": {
+     "Variables": {
+      "USER_ON_EVENT_FUNCTION_ARN": {
+       "Fn::GetAtt": [
+        "SeedSlotsBF536987",
+        "Arn"
+       ]
+      }
+     }
+    },
+    "Handler": "framework.onEvent",
+    "Role": {
+     "Fn::GetAtt": [
+      "SeedSlotsProviderframeworkonEventServiceRole4C55EB32",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs20.x",
+    "Timeout": 900
+   },
+   "DependsOn": [
+    "SeedSlotsProviderframeworkonEventServiceRoleDefaultPolicy4A0F5ED2",
+    "SeedSlotsProviderframeworkonEventServiceRole4C55EB32"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "BookingAgentStackUsEast/SeedSlotsProvider/framework-onEvent/Resource",
+    "aws:asset:path": "asset.d9861ea7a45affd23e47a614acb2fddc6e45c20a891284c958187dafbf9ee36b",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "SeedSlotsResource": {
+   "Type": "AWS::CloudFormation::CustomResource",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "SeedSlotsProviderframeworkonEvent85987EEC",
+      "Arn"
+     ]
+    },
+    "TableArn": {
+     "Fn::GetAtt": [
+      "BookingTable7E9C9410",
+      "Arn"
+     ]
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "BookingAgentStackUsEast/SeedSlotsResource/Default"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/22OzW7CMBCEn4W7cYG0DwBU7alqFKpe0cbZBhf/RN51UWTl3Ss7VHDoab+dWc3ORq6fVnK1gAstVXdeGt3KdGBQZwEXOqZudGB918r0Aa3Bz43Yf7lX41swRZgEoQrIZMFBj0GmQ9nz2UyT0GBlarzBLJZZe6PVmNeZJmHAth3I9BKdYu1d9u65xmA1kfZuElQdgQiZ5DYPQZXcRXVG3gGhgEH3wHiBUaYGibeDLn9vuFXKR8fiGQfjR4uutL3bDgx9KTtDg+RjUFji35BPvsvmlf7c65PC03STS8ccpF2fb94jD5GFisTeHsP1jGQd/I/uMIh9cf6NFfXIJ+8eKrl+lNXim7RehuhYW5TNPH8BfW63j9EBAAA="
+   },
+   "Metadata": {
+    "aws:cdk:path": "BookingAgentStackUsEast/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "WhatsAppApiEndpoint1B9C9F97": {
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Ref": "WhatsAppApiD20252F2"
+      },
+      ".execute-api.us-east-1.",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/",
+      {
+       "Ref": "WhatsAppApiDeploymentStageprodBDC44156"
+      },
+      "/"
+     ]
+    ]
+   }
+  },
+  "ApiEndpoint": {
+   "Description": "API Gateway endpoint URL",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Ref": "WhatsAppApiD20252F2"
+      },
+      ".execute-api.us-east-1.",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/",
+      {
+       "Ref": "WhatsAppApiDeploymentStageprodBDC44156"
+      }
+     ]
+    ]
+   }
+  },
+  "TableName": {
+   "Description": "DynamoDB table name",
+   "Value": {
+    "Ref": "BookingTable7E9C9410"
+   }
+  },
+  "SecretArn": {
+   "Description": "Secrets Manager secret ARN",
+   "Value": {
+    "Ref": "MetaCredentialsF3EB9C83"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

@@ -11,6 +11,7 @@ import aws_cdk.aws_iam as iam
 import aws_cdk.aws_lambda as lambda_
 import aws_cdk.aws_secretsmanager as secrets
 import aws_cdk.aws_apigateway as apigateway
+import aws_cdk.custom_resources as custom_resources
 from constructs import Construct
 
 
@@ -23,7 +24,7 @@ class BookingAgentStack(cdk.Stack):
         # ===== 0. AgentCore Harness (Managed Agent) =====
         # Note: AgentCore Harness is created via AWS Console or CloudFormation
         # We reference it here via env var AGENTCORE_HARNESS_ARN
-        # Create a harness at: https://console.aws.amazon.com/bedrock/home?region=ap-south-1#/agent-harnesses
+        # Create a harness at: https://console.aws.amazon.com/bedrock/home?region=us-east-1#/agent-harnesses
         # Or use CloudFormation with AWS::Bedrock::Agent
         harness_arn = os.getenv("AGENTCORE_HARNESS_ARN", "")
 
@@ -193,7 +194,7 @@ class BookingAgentStack(cdk.Stack):
             self,
             "SeedSlots",
             runtime=lambda_.Runtime.PYTHON_3_12,
-            handler="seed.handler",
+            handler="index.handler",
             code=lambda_.Code.from_inline("""
 import boto3
 import os
@@ -227,10 +228,16 @@ def handler(event, context):
             },
         )
 
+        seed_provider = custom_resources.Provider(
+            self,
+            "SeedSlotsProvider",
+            on_event_handler=seed_lambda,
+        )
+
         cdk.CustomResource(
             self,
             "SeedSlotsResource",
-            service_token=seed_lambda.function_arn,
+            service_token=seed_provider.service_token,
             properties={"TableArn": table.table_arn},
         )
 

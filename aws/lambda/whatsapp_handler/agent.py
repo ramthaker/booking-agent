@@ -26,7 +26,7 @@ def build_supervisor() -> Agent:
         Agent configured with two tools and memory for user preferences.
     """
     model_id = os.getenv("BEDROCK_MODEL_ID", "anthropic.claude-3-haiku-20240307-v1:0")
-    region = os.getenv("REGION", "ap-south-1")  # Use REGION instead of AWS_REGION (reserved by Lambda)
+    region = os.getenv("REGION", "us-east-1")  # Use REGION instead of AWS_REGION (reserved by Lambda)
 
     # Get DynamoDB table name
     table_name = os.getenv("DYNAMODB_TABLE_NAME", "BookingTable")
@@ -186,7 +186,7 @@ def _invoke_agentcore_runtime(session_id: str, message: str) -> str:
         agent_id = harness_arn.split("/")[-1]
         alias_id = os.getenv("AGENTCORE_ALIAS_ID", "TSTALIASID")
 
-        client = boto3.client("bedrock-agent-runtime", region_name="ap-south-1")
+        client = boto3.client("bedrock-agent-runtime", region_name=os.getenv("REGION", "us-east-1"))
 
         response = client.invoke_agent(
             agentId=agent_id,
@@ -221,7 +221,7 @@ def _invoke_agentcore_harness(session_id: str, message: str) -> str:
         agent_id = harness_arn.split("/")[-1]
         alias_id = os.getenv("AGENTCORE_ALIAS_ID", "TSTALIASID")
 
-        client = boto3.client("bedrock-agent-runtime", region_name="ap-south-1")
+        client = boto3.client("bedrock-agent-runtime", region_name=os.getenv("REGION", "us-east-1"))
 
         # Invoke the harness with session ID for memory scoping
         response = client.invoke_agent(

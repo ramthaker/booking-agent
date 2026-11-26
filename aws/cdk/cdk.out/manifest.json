@@ -1,28 +1,28 @@
 {
   "version": "36.0.0",
   "artifacts": {
-    "BookingAgentStack.assets": {
+    "BookingAgentStackUsEast.assets": {
       "type": "cdk:asset-manifest",
       "properties": {
-        "file": "BookingAgentStack.assets.json",
+        "file": "BookingAgentStackUsEast.assets.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
       }
     },
-    "BookingAgentStack": {
+    "BookingAgentStackUsEast": {
       "type": "aws:cloudformation:stack",
       "environment": "aws://112505857747/us-east-1",
       "properties": {
-        "templateFile": "BookingAgentStack.template.json",
+        "templateFile": "BookingAgentStackUsEast.template.json",
         "terminationProtection": false,
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::112505857747:role/cdk-hnb659fds-deploy-role-112505857747-us-east-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::112505857747:role/cdk-hnb659fds-cfn-exec-role-112505857747-us-east-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-112505857747-us-east-1/e4964d2579582b468f0efdf5a936ec70b644cd99707f4ecd022f8d753dfa2e52.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-112505857747-us-east-1/fbbea69ca134b61e91ac942a9269989a9aece4956ef94ce4119b9cfdabba8f73.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
-          "BookingAgentStack.assets"
+          "BookingAgentStackUsEast.assets"
         ],
         "lookupRole": {
           "arn": "arn:${AWS::Partition}:iam::112505857747:role/cdk-hnb659fds-lookup-role-112505857747-us-east-1",
@@ -31,149 +31,185 @@
         }
       },
       "dependencies": [
-        "BookingAgentStack.assets"
+        "BookingAgentStackUsEast.assets"
       ],
       "metadata": {
-        "/BookingAgentStack/BookingTable/Resource": [
+        "/BookingAgentStackUsEast/BookingTable/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "BookingTable7E9C9410"
           }
         ],
-        "/BookingAgentStack/MetaCredentials/Resource": [
+        "/BookingAgentStackUsEast/MetaCredentials/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "MetaCredentialsF3EB9C83"
           }
         ],
-        "/BookingAgentStack/LambdaRole/Resource": [
+        "/BookingAgentStackUsEast/LambdaRole/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "LambdaRole3A44B857"
           }
         ],
-        "/BookingAgentStack/WhatsAppHandler/Resource": [
+        "/BookingAgentStackUsEast/WhatsAppHandler/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "WhatsAppHandler3F0B6DCF"
           }
         ],
-        "/BookingAgentStack/WhatsAppApi/Resource": [
+        "/BookingAgentStackUsEast/WhatsAppApi/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "WhatsAppApiD20252F2"
           }
         ],
-        "/BookingAgentStack/WhatsAppApi/CloudWatchRole/Resource": [
+        "/BookingAgentStackUsEast/WhatsAppApi/CloudWatchRole/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "WhatsAppApiCloudWatchRoleA538C667"
           }
         ],
-        "/BookingAgentStack/WhatsAppApi/Account": [
+        "/BookingAgentStackUsEast/WhatsAppApi/Account": [
           {
             "type": "aws:cdk:logicalId",
             "data": "WhatsAppApiAccountAD1BB99B"
           }
         ],
-        "/BookingAgentStack/WhatsAppApi/Deployment/Resource": [
+        "/BookingAgentStackUsEast/WhatsAppApi/Deployment/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "WhatsAppApiDeployment91AFD2B57419bc1e95fe45c86140e45725fbce5c"
+            "data": "WhatsAppApiDeployment91AFD2B523bed0a85907bf23d7f3fe077c6cb632"
           }
         ],
-        "/BookingAgentStack/WhatsAppApi/DeploymentStage.prod/Resource": [
+        "/BookingAgentStackUsEast/WhatsAppApi/DeploymentStage.prod/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "WhatsAppApiDeploymentStageprodBDC44156"
           }
         ],
-        "/BookingAgentStack/WhatsAppApi/Endpoint": [
+        "/BookingAgentStackUsEast/WhatsAppApi/Endpoint": [
           {
             "type": "aws:cdk:logicalId",
             "data": "WhatsAppApiEndpoint1B9C9F97"
           }
         ],
-        "/BookingAgentStack/WhatsAppApi/Default/{proxy}/Resource": [
+        "/BookingAgentStackUsEast/WhatsAppApi/Default/ANY/ApiPermission.BookingAgentStackUsEastWhatsAppApiE0C887D5.ANY..": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "WhatsAppApiproxy99215450"
+            "data": "WhatsAppApiANYApiPermissionBookingAgentStackUsEastWhatsAppApiE0C887D5ANY14F48739"
           }
         ],
-        "/BookingAgentStack/WhatsAppApi/Default/{proxy}/ANY/ApiPermission.BookingAgentStackWhatsAppApi2B0761A7.ANY..{proxy}": [
+        "/BookingAgentStackUsEast/WhatsAppApi/Default/ANY/ApiPermission.Test.BookingAgentStackUsEastWhatsAppApiE0C887D5.ANY..": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "WhatsAppApiproxyANYApiPermissionBookingAgentStackWhatsAppApi2B0761A7ANYproxy762E7A3F"
+            "data": "WhatsAppApiANYApiPermissionTestBookingAgentStackUsEastWhatsAppApiE0C887D5ANYAD038313"
           }
         ],
-        "/BookingAgentStack/WhatsAppApi/Default/{proxy}/ANY/ApiPermission.Test.BookingAgentStackWhatsAppApi2B0761A7.ANY..{proxy}": [
+        "/BookingAgentStackUsEast/WhatsAppApi/Default/ANY/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "WhatsAppApiproxyANYApiPermissionTestBookingAgentStackWhatsAppApi2B0761A7ANYproxy1B0AABF1"
+            "data": "WhatsAppApiANY6BFB3957"
           }
         ],
-        "/BookingAgentStack/WhatsAppApi/Default/{proxy}/ANY/Resource": [
+        "/BookingAgentStackUsEast/WhatsAppApi/Default/{proxy+}/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "WhatsAppApiproxyANY2A5DCCB3"
+            "data": "WhatsAppApiproxy9B8BD162"
           }
         ],
-        "/BookingAgentStack/SeedLambdaRole/Resource": [
+        "/BookingAgentStackUsEast/WhatsAppApi/Default/{proxy+}/ANY/ApiPermission.BookingAgentStackUsEastWhatsAppApiE0C887D5.ANY..{proxy+}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WhatsAppApiproxyANYApiPermissionBookingAgentStackUsEastWhatsAppApiE0C887D5ANYproxyBC466812"
+          }
+        ],
+        "/BookingAgentStackUsEast/WhatsAppApi/Default/{proxy+}/ANY/ApiPermission.Test.BookingAgentStackUsEastWhatsAppApiE0C887D5.ANY..{proxy+}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WhatsAppApiproxyANYApiPermissionTestBookingAgentStackUsEastWhatsAppApiE0C887D5ANYproxy2A536E24"
+          }
+        ],
+        "/BookingAgentStackUsEast/WhatsAppApi/Default/{proxy+}/ANY/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WhatsAppApiproxyANY3F267A50"
+          }
+        ],
+        "/BookingAgentStackUsEast/SeedLambdaRole/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "SeedLambdaRole88DBA302"
           }
         ],
-        "/BookingAgentStack/SeedSlots/Resource": [
+        "/BookingAgentStackUsEast/SeedSlots/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "SeedSlotsBF536987"
           }
         ],
-        "/BookingAgentStack/SeedSlotsResource/Default": [
+        "/BookingAgentStackUsEast/SeedSlotsProvider/framework-onEvent/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SeedSlotsProviderframeworkonEventServiceRole4C55EB32"
+          }
+        ],
+        "/BookingAgentStackUsEast/SeedSlotsProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SeedSlotsProviderframeworkonEventServiceRoleDefaultPolicy4A0F5ED2"
+          }
+        ],
+        "/BookingAgentStackUsEast/SeedSlotsProvider/framework-onEvent/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SeedSlotsProviderframeworkonEvent85987EEC"
+          }
+        ],
+        "/BookingAgentStackUsEast/SeedSlotsResource/Default": [
           {
             "type": "aws:cdk:logicalId",
             "data": "SeedSlotsResource"
           }
         ],
-        "/BookingAgentStack/ApiEndpoint": [
+        "/BookingAgentStackUsEast/ApiEndpoint": [
           {
             "type": "aws:cdk:logicalId",
             "data": "ApiEndpoint"
           }
         ],
-        "/BookingAgentStack/TableName": [
+        "/BookingAgentStackUsEast/TableName": [
           {
             "type": "aws:cdk:logicalId",
             "data": "TableName"
           }
         ],
-        "/BookingAgentStack/SecretArn": [
+        "/BookingAgentStackUsEast/SecretArn": [
           {
             "type": "aws:cdk:logicalId",
             "data": "SecretArn"
           }
         ],
-        "/BookingAgentStack/CDKMetadata/Default": [
+        "/BookingAgentStackUsEast/CDKMetadata/Default": [
           {
             "type": "aws:cdk:logicalId",
             "data": "CDKMetadata"
           }
         ],
-        "/BookingAgentStack/BootstrapVersion": [
+        "/BookingAgentStackUsEast/BootstrapVersion": [
           {
             "type": "aws:cdk:logicalId",
             "data": "BootstrapVersion"
           }
         ],
-        "/BookingAgentStack/CheckBootstrapVersion": [
+        "/BookingAgentStackUsEast/CheckBootstrapVersion": [
           {
             "type": "aws:cdk:logicalId",
             "data": "CheckBootstrapVersion"
           }
         ]
       },
-      "displayName": "BookingAgentStack"
+      "displayName": "BookingAgentStackUsEast"
     },
     "Tree": {
       "type": "cdk:tree",
