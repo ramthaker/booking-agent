@@ -1,0 +1,314 @@
+{
+  "/BookingAgentStack": [
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...jsii runtime, node internals...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    },
+    {
+      "type": "aws:cdk:templateFile",
+      "data": "BookingAgentStack.template.json"
+    }
+  ],
+  "/BookingAgentStack/ApiEndpoint": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ApiEndpoint"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...jsii runtime, node internals...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/BookingAgentStack/TableName": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "TableName"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...jsii runtime, node internals...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/BookingAgentStack/SecretArn": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SecretArn"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...jsii runtime, node internals...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/BookingAgentStack/BootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "BootstrapVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/BookingAgentStack/CheckBootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CheckBootstrapVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/BookingAgentStack/BookingTable/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "BookingTable7E9C9410"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, jsii runtime, node internals...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/BookingAgentStack/MetaCredentials/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "MetaCredentialsF3EB9C83"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, jsii runtime, node internals...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/BookingAgentStack/LambdaRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LambdaRole3A44B857"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, jsii runtime, node internals...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/BookingAgentStack/WhatsAppHandler/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "WhatsAppHandler3F0B6DCF"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, jsii runtime, node internals...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/BookingAgentStack/WhatsAppApi/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "WhatsAppApiD20252F2"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, jsii runtime, node internals...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/BookingAgentStack/WhatsAppApi/Account": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "WhatsAppApiAccountAD1BB99B"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, jsii runtime, node internals...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/BookingAgentStack/WhatsAppApi/Endpoint": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "WhatsAppApiEndpoint1B9C9F97"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, jsii runtime, node internals...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/BookingAgentStack/SeedLambdaRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SeedLambdaRole88DBA302"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, jsii runtime, node internals...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/BookingAgentStack/SeedSlots/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SeedSlotsBF536987"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, jsii runtime, node internals...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/BookingAgentStack/SeedSlotsResource/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "SeedSlotsResource"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, jsii runtime, node internals...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/BookingAgentStack/CDKMetadata/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CDKMetadata"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, jsii runtime...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/BookingAgentStack/WhatsAppApi/CloudWatchRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "WhatsAppApiCloudWatchRoleA538C667"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, jsii runtime...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/BookingAgentStack/WhatsAppApi/Deployment/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "WhatsAppApiDeployment91AFD2B57419bc1e95fe45c86140e45725fbce5c"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, jsii runtime...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/BookingAgentStack/WhatsAppApi/DeploymentStage.prod/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "WhatsAppApiDeploymentStageprodBDC44156"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, jsii runtime...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/BookingAgentStack/WhatsAppApi/Default/{proxy}/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "WhatsAppApiproxy99215450"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, jsii runtime, node internals...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/BookingAgentStack/WhatsAppApi/Default/{proxy}/ANY/ApiPermission.BookingAgentStackWhatsAppApi2B0761A7.ANY..{proxy}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "WhatsAppApiproxyANYApiPermissionBookingAgentStackWhatsAppApi2B0761A7ANYproxy762E7A3F"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, jsii runtime...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/BookingAgentStack/WhatsAppApi/Default/{proxy}/ANY/ApiPermission.Test.BookingAgentStackWhatsAppApi2B0761A7.ANY..{proxy}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "WhatsAppApiproxyANYApiPermissionTestBookingAgentStackWhatsAppApi2B0761A7ANYproxy1B0AABF1"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, jsii runtime...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/BookingAgentStack/WhatsAppApi/Default/{proxy}/ANY/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "WhatsAppApiproxyANY2A5DCCB3"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, jsii runtime...",
+        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ]
+}
