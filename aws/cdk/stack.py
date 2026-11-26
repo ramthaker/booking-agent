@@ -236,7 +236,7 @@ def handler(event, context):
         cdk.CfnOutput(
             self,
             "ApiEndpoint",
-            value=api.api_endpoint,
+            value=api.url.rstrip("/"),
             description="API Gateway endpoint URL",
         )
         cdk.CfnOutput(
