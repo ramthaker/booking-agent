@@ -100,7 +100,9 @@
                   "aws:cdk:cloudformation:props": {
                     "description": "Meta WhatsApp Business credentials",
                     "generateSecretString": {
-                      "excludePunctuation": true
+                      "excludePunctuation": true,
+                      "generateStringKey": "bootstrap_token",
+                      "secretStringTemplate": "{\"verify_token\":\"whatsapp_booking_agent\",\"access_token\":\"\",\"app_secret\":\"\",\"phone_number_id\":\"\"}"
                     },
                     "name": "WhatsApp/MetaCredentials"
                   }

@@ -72,7 +72,9 @@
    "Properties": {
     "Description": "Meta WhatsApp Business credentials",
     "GenerateSecretString": {
-     "ExcludePunctuation": true
+     "ExcludePunctuation": true,
+     "GenerateStringKey": "bootstrap_token",
+     "SecretStringTemplate": "{\"verify_token\":\"whatsapp_booking_agent\",\"access_token\":\"\",\"app_secret\":\"\",\"phone_number_id\":\"\"}"
     },
     "Name": "WhatsApp/MetaCredentials"
    },
