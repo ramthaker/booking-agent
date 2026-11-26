@@ -145,9 +145,6 @@ class BookingAgentStack(cdk.Stack):
                 "AGENT_MODE": os.getenv("AGENT_MODE", "lambda-strands"),  # lambda-strands, agentcore-runtime, agentcore-harness
                 "AGENTCORE_HARNESS_ARN": harness_arn,  # Required for agentcore-runtime and agentcore-harness
                 "META_VERIFY_TOKEN": meta_secret.secret_value_from_json("verify_token").unsafe_unwrap(),
-            },
-            # Secrets injected via environment variables (CDK handles this automatically)
-            environment={
                 "META_ACCESS_TOKEN": meta_secret.secret_value_from_json("access_token").unsafe_unwrap(),
                 "META_APP_SECRET": meta_secret.secret_value_from_json("app_secret").unsafe_unwrap(),
                 "META_PHONE_NUMBER_ID": meta_secret.secret_value_from_json("phone_number_id").unsafe_unwrap(),
