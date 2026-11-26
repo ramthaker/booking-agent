@@ -1,4 +1,10 @@
-"""AgentCore Harness agent with memory for the booking assistant."""
+"""AgentCore agent with multiple runtime modes.
+
+Mode selection via AGENT_MODE env var:
+- lambda-strands: Lambda + Strands Agent (code-controlled)
+- agentcore-runtime: AgentCore Runtime (your agent code)
+- agentcore-harness: AgentCore Harness (fully managed)
+"""
 from __future__ import annotations
 
 import os
@@ -6,6 +12,11 @@ from typing import Optional
 
 from strands import Agent, tool
 from strands.models.bedrock import BedrockModel
+
+
+AGENT_MODE = os.getenv("AGENT_MODE", "lambda-strands").lower()
+assert AGENT_MODE in ["lambda-strands", "agentcore-runtime", "agentcore-harness"], \
+    f"Invalid AGENT_MODE: {AGENT_MODE}. Must be lambda-strands, agentcore-runtime, or agentcore-harness"
 
 
 def build_supervisor() -> Agent:
@@ -155,6 +166,84 @@ Use this memory to provide a more personalized experience on subsequent visits.
     return supervisor
 
 
+def _invoke_lambda_strands(session_id: str, message: str) -> str:
+    """Lambda + Strands Agent mode (code-controlled)."""
+    supervisor = build_supervisor()
+    response = supervisor(message)
+    return response if isinstance(response, str) else str(response)
+
+
+def _invoke_agentcore_runtime(session_id: str, message: str) -> str:
+    """AgentCore Runtime mode (invoke your own agent code)."""
+    harness_arn = os.getenv("AGENTCORE_HARNESS_ARN")
+    if not harness_arn:
+        # Fallback to lambda-strands
+        return _invoke_lambda_strands(session_id, message)
+
+    try:
+        import boto3
+
+        agent_id = harness_arn.split("/")[-1]
+        alias_id = os.getenv("AGENTCORE_ALIAS_ID", "TSTALIASID")
+
+        client = boto3.client("bedrock-agent-runtime", region_name="ap-south-1")
+
+        response = client.invoke_agent(
+            agentId=agent_id,
+            agentAliasId=alias_id,
+            sessionId=session_id,
+            inputText=message,
+        )
+
+        response_parts = []
+        for event in response.get("completion", []):
+            if "chunk" in event:
+                data = event["chunk"]["bytes"].decode("utf-8")
+                response_parts.append(data)
+
+        return "".join(response_parts).strip()
+
+    except Exception as e:
+        print(f"AgentCore Runtime error, falling back to lambda-strands: {e}")
+        return _invoke_lambda_strands(session_id, message)
+
+
+def _invoke_agentcore_harness(session_id: str, message: str) -> str:
+    """AgentCore Harness mode (fully managed agent)."""
+    harness_arn = os.getenv("AGENTCORE_HARNESS_ARN")
+    if not harness_arn:
+        # Fallback to lambda-strands
+        return _invoke_lambda_strands(session_id, message)
+
+    try:
+        import boto3
+
+        agent_id = harness_arn.split("/")[-1]
+        alias_id = os.getenv("AGENTCORE_ALIAS_ID", "TSTALIASID")
+
+        client = boto3.client("bedrock-agent-runtime", region_name="ap-south-1")
+
+        # Invoke the harness with session ID for memory scoping
+        response = client.invoke_agent(
+            agentId=agent_id,
+            agentAliasId=alias_id,
+            sessionId=session_id,
+            inputText=message,
+        )
+
+        response_parts = []
+        for event in response.get("completion", []):
+            if "chunk" in event:
+                data = event["chunk"]["bytes"].decode("utf-8")
+                response_parts.append(data)
+
+        return "".join(response_parts).strip()
+
+    except Exception as e:
+        print(f"AgentCore Harness error, falling back to lambda-strands: {e}")
+        return _invoke_lambda_strands(session_id, message)
+
+
 def invoke_agent(
     session_id: str, message: str, phone_hash: Optional[str] = None
 ) -> str:
@@ -168,48 +257,14 @@ def invoke_agent(
     Returns:
         The agent's response text
     """
-    harness_arn = os.getenv("AGENTCORE_HARNESS_ARN")
-
-    if harness_arn:
-        # Use AgentCore Harness via Runtime SDK
-        # The Harness runs the agent (model + tools + memory) managed by AWS
-        try:
-            import boto3
-
-            # Extract agent ID from ARN: arn:aws:bedrock:region:acc:agent-runtime/agent-id
-            agent_id = harness_arn.split("/")[-1] if "/" in harness_arn else harness_arn
-            alias_id = os.getenv("AGENTCORE_ALIAS_ID", "TSTALIASID")
-
-            client = boto3.client("bedrock-agent-runtime", region_name="ap-south-1")
-
-            response = client.invoke_agent(
-                agentId=agent_id,
-                agentAliasId=alias_id,
-                sessionId=session_id,
-                inputText=message,
-            )
-
-            # Extract response from AgentCore chunks
-            response_parts = []
-            for event in response.get("completion", []):
-                if "chunk" in event:
-                    data = event["chunk"]["bytes"].decode("utf-8")
-                    response_parts.append(data)
-
-            return "".join(response_parts).strip()
-
-        except Exception as e:
-            # Log error but fall back to Strands Agent
-            print(f"AgentCore Harness error, falling back to Strands: {e}")
-            return _invoke_strands_agent(session_id, message)
-
-    # Fall back to direct Strands Agent invocation
-    return _invoke_strands_agent(session_id, message)
-
-
-def _invoke_strands_agent(session_id: str, message: str) -> str:
-    """Invoke Strands Agent directly (fallback when no Harness configured)."""
-    supervisor = build_supervisor()
-    response = supervisor(message)
-    return response if isinstance(response, str) else str(response)
+    # Route to appropriate mode
+    if AGENT_MODE == "lambda-strands":
+        return _invoke_lambda_strands(session_id, message)
+    elif AGENT_MODE == "agentcore-runtime":
+        return _invoke_agentcore_runtime(session_id, message)
+    elif AGENT_MODE == "agentcore-harness":
+        return _invoke_agentcore_harness(session_id, message)
+    else:
+        # Fallback
+        return _invoke_lambda_strands(session_id, message)
 

@@ -142,7 +142,8 @@ class BookingAgentStack(cdk.Stack):
                 "BEDROCK_MODEL_ID": os.getenv("BEDROCK_MODEL_ID", "anthropic.claude-3-haiku-20240307-v1:0"),
                 "AWS_REGION": self.region,
                 "RATE_LIMIT_PER_MINUTE": "5",
-                "AGENTCORE_HARNESS_ARN": harness_arn,  # Optional - leave empty to use Strands Agent
+                "AGENT_MODE": os.getenv("AGENT_MODE", "lambda-strands"),  # lambda-strands, agentcore-runtime, agentcore-harness
+                "AGENTCORE_HARNESS_ARN": harness_arn,  # Required for agentcore-runtime and agentcore-harness
                 "META_VERIFY_TOKEN": meta_secret.secret_value_from_json("verify_token").unsafe_unwrap(),
             },
             secrets={
