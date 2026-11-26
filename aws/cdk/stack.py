@@ -131,7 +131,7 @@ class BookingAgentStack(cdk.Stack):
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="handler.lambda_handler",
             code=lambda_.Code.from_asset(
-                "aws/lambda/whatsapp_handler",
+                "../lambda/whatsapp_handler",
                 exclude=["*.pyc", "__pycache__", "*.pyo"],
             ),
             role=lambda_role,
