@@ -1,0 +1,137 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'AgentCore Harness for WhatsApp Booking Agent'
+
+Parameters:
+  AgentName:
+    Type: String
+    Default: 'booking-assistant'
+    Description: 'Name of the AgentCore Harness'
+  
+  BedrockModelId:
+    Type: String
+    Default: 'anthropic.claude-3-haiku-20240307-v1:0'
+    Description: 'Bedrock model ID to use for the agent'
+  
+  Region:
+    Type: String
+    Default: 'ap-south-1'
+    Description: 'AWS region'
+
+Resources:
+  # AgentCore Harness
+  BookingAgentHarness:
+    Type: AWS::Bedrock::Agent
+    Properties:
+      AgentName: !Ref AgentName
+      Description: 'WhatsApp booking agent with Strands-like orchestration'
+      ModelId: !Ref BedrockModelId
+      AgentResourceRoleArn: !GetAtt AgentRole.Arn
+      
+      # Memory configuration
+      MemorySettings:
+        MemoryState: ENABLED
+        MemoryType: CONVERSATION
+        
+      # Instructions
+      Instructions: >
+        You are a clinic appointment booking assistant. Help patients check available slots
+        and book appointments. Always check availability first, then ask for patient name
+        before booking. Only book after explicit confirmation. One booking per person only.
+        
+      # Tools
+      AgentActions:
+        - ActionGroupName: 'BookingActions'
+          ActionVersion: 'DRAFT'
+          ActionDelegationPreProcessingConfig:
+            OverrideLambda: !Ref ToolLambda
+          
+      # Prompts
+      PromptCustomization:
+        Preamble: 'You are a helpful clinic booking assistant. Keep responses under 200 characters.'
+        
+  # Role for Agent to access Bedrock and DynamoDB
+  AgentRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: bedrock.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonBedrockFullAccess
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+      Policies:
+        - PolicyName: AgentCorePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource: !Sub 'arn:aws:dynamodb:${Region}:${AWS::AccountId}:table/BookingTable-*'
+
+  # Lambda for tool orchestration (optional - for complex tool logic)
+  ToolLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${AgentName}-tools'
+      Runtime: python3.12
+      Handler: handler.lambda_handler
+      Role: !GetAtt ToolLambdaRole.Arn
+      Code:
+        ZipFile: |
+          import json
+          
+          def lambda_handler(event, context):
+              # AgentCore tool orchestration handler
+              return {
+                  'isError': False,
+                  'responseBody': {
+                      'TEXT': {
+                          'body': 'Tools are configured via the console. Use the AWS Bedrock console to set up tools.'
+                      }
+                  }
+              }
+      Timeout: 30
+      MemorySize: 256
+
+  ToolLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonBedrockFullAccess
+
+Outputs:
+  AgentId:
+    Description: 'AgentCore Harness ID'
+    Value: !Ref BookingAgentHarness
+    Export:
+      Name: !Sub '${AWS::StackName}-AgentId'
+      
+  AgentVersion:
+    Description: 'AgentCore Harness version'
+    Value: 'DRAFT'
+    
+  Instructions:
+    Description: 'To complete setup, create an alias in AWS Console and configure tools'
+    Value: 'Visit AWS Console > Bedrock > AgentCore Harnesses > Create alias'
