@@ -37,7 +37,7 @@ class BookingAgentStack(cdk.Stack):
             sort_key=dynamodb.Attribute(
                 name="sk", type=dynamodb.AttributeType.STRING
             ),
-            billing=dynamodb.Billing.pay_per_request(),
+            billing=dynamodb.Billing.on_demand(),  # Pay-per-request
             deletion_protection=False,  # Enable in production
             point_in_time_recovery=True,
         )
