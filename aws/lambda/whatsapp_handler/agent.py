@@ -26,7 +26,7 @@ def build_supervisor() -> Agent:
         Agent configured with two tools and memory for user preferences.
     """
     model_id = os.getenv("BEDROCK_MODEL_ID", "anthropic.claude-3-haiku-20240307-v1:0")
-    region = os.getenv("AWS_REGION", "ap-south-1")
+    region = os.getenv("REGION", "ap-south-1")  # Use REGION instead of AWS_REGION (reserved by Lambda)
 
     # Get DynamoDB table name
     table_name = os.getenv("DYNAMODB_TABLE_NAME", "BookingTable")

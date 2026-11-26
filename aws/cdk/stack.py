@@ -140,7 +140,7 @@ class BookingAgentStack(cdk.Stack):
             environment={
                 "DYNAMODB_TABLE_NAME": table.table_name,
                 "BEDROCK_MODEL_ID": os.getenv("BEDROCK_MODEL_ID", "anthropic.claude-3-haiku-20240307-v1:0"),
-                "AWS_REGION": self.region,
+                "REGION": self.region,  # Use REGION instead of AWS_REGION (reserved by Lambda)
                 "RATE_LIMIT_PER_MINUTE": "5",
                 "AGENT_MODE": os.getenv("AGENT_MODE", "lambda-strands"),  # lambda-strands, agentcore-runtime, agentcore-harness
                 "AGENTCORE_HARNESS_ARN": harness_arn,  # Required for agentcore-runtime and agentcore-harness
