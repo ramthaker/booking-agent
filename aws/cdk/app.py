@@ -3,11 +3,13 @@
 import os
 import sys
 
-# Fix for relative imports - convert to absolute imports
+# Ensure parent directory is in path for relative imports to work
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import aws_cdk as cdk
-from aws.cdk.stack import BookingAgentStack
+
+# Import stack using relative path
+from stack import BookingAgentStack
 
 app = cdk.App()
 BookingAgentStack(app, "BookingAgentStack", env=cdk.Environment(
